@@ -9,6 +9,7 @@ import com.spotify.docker.client.messages.HostConfig;
 public class Container {
     private DockerClient client;
     private String imageName;
+    private StartedContainer startedContainer;
 
     public Container(DockerClient client, String imageName) {
         this.client = client;
@@ -25,7 +26,14 @@ public class Container {
         } catch (DockerException | InterruptedException e) {
             throw new ContainerException(e);
         }
-        return new StartedContainer(client, container.id());
+        startedContainer = new StartedContainer(client, container.id());
+        return startedContainer;
+    }
+
+    void stopIfStarted() {
+        if (startedContainer != null) {
+            startedContainer.stop();
+        }
     }
 
     public class StartedContainer {
