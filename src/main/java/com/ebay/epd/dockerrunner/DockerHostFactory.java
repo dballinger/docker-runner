@@ -11,7 +11,12 @@ public class DockerHostFactory {
 
     public static DockerHost dockerHostForEnvironment(Map<String, String> env) {
         try {
-            return new BootToDockerHost(env.get("DOCKER_HOST"));
+            String hostKey = "DOCKER_HOST";
+            if (env.containsKey(hostKey)) {
+                return new BootToDockerHost(env.get(hostKey));
+            } else {
+                return new NativeDockerHost();
+            }
         } catch (URISyntaxException e) {
             throw new DockerHostException(e);
         }
@@ -19,6 +24,7 @@ public class DockerHostFactory {
 
     public static interface DockerHost {
         DockerClient client();
+
         String host();
     }
 
@@ -42,6 +48,19 @@ public class DockerHostFactory {
         @Override
         public String host() {
             return host;
+        }
+    }
+
+    public static class NativeDockerHost implements DockerHost {
+
+        @Override
+        public DockerClient client() {
+            return new DefaultDockerClient("unix:///var/run/docker.sock");
+        }
+
+        @Override
+        public String host() {
+            return "localhost";
         }
     }
 

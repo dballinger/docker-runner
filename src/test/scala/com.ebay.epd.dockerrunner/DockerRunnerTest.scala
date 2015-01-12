@@ -5,7 +5,7 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterAll, Matchers, FlatSpec}
 import org.scalatest.concurrent.Eventually
-import org.scalatest.time.{Second, Span}
+import org.scalatest.time.{Seconds, Second, Span}
 
 import scala.concurrent.Await
 
@@ -15,7 +15,7 @@ class DockerRunnerTest extends FlatSpec with Eventually with Matchers with Befor
   import scala.concurrent.ExecutionContext.Implicits.global
   import concurrent.duration._
 
-  override implicit val patienceConfig = PatienceConfig(timeout = Span(1, Second))
+  override implicit val patienceConfig = PatienceConfig(timeout = Span(2, Seconds))
 
   val dockerRunner = new DockerRunner()
 
