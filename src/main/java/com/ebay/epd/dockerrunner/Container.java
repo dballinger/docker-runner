@@ -15,10 +15,10 @@ import static com.google.common.collect.Lists.newArrayList;
 public class Container {
     private DockerClient client;
     private String imageName;
-    private Iterable<DockerRunner.Link> links;
+    private Iterable<Link> links;
     private StartedContainer startedContainer;
 
-    public Container(DockerClient client, String imageName, Iterable<DockerRunner.Link> links) {
+    public Container(DockerClient client, String imageName, Iterable<Link> links) {
         this.client = client;
         this.imageName = imageName;
         this.links = links;
@@ -28,9 +28,9 @@ public class Container {
         if (startedContainer != null) {
             return startedContainer;
         } else {
-            List<String> concatLinks = newArrayList(Iterables.transform(links, new Function<DockerRunner.Link, String>() {
+            List<String> concatLinks = newArrayList(Iterables.transform(links, new Function<Link, String>() {
                 @Override
-                public String apply(DockerRunner.Link link) {
+                public String apply(Link link) {
                     return String.format("%s:%s", link.name, link.alias);
                 }
             }));

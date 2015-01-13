@@ -1,7 +1,6 @@
 package com.ebay.epd.dockerrunner
 
-import com.ebay.epd.dockerrunner.DockerRunner.Link
-import org.scalatest.{Matchers, FlatSpec, FunSuite}
+import org.scalatest.{FlatSpec, Matchers}
 
 class ContainerTest extends FlatSpec with Matchers {
 

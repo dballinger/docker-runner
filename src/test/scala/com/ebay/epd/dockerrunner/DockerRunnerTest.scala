@@ -9,7 +9,6 @@ import org.scalatest.time.{Seconds, Second, Span}
 
 import scala.concurrent.Await
 
-@RunWith(classOf[JUnitRunner])
 class DockerRunnerTest extends FlatSpec with Eventually with Matchers with BeforeAndAfterAll {
 
   import scala.concurrent.ExecutionContext.Implicits.global
@@ -29,10 +28,8 @@ class DockerRunnerTest extends FlatSpec with Eventually with Matchers with Befor
     val startedContainer = container.start()
     val host = dockerRunner.host()
     val port = startedContainer.tcpPort(80)
-    eventually {
-      val body = Await.result(Http(url(s"http://$host:$port/ok") OK as.String), 1 second)
-      body should be("ok")
-    }
+    val body = Await.result(Http(url(s"http://$host:$port/ok") OK as.String), 1 second)
+    body should be("ok")
   }
 
   it should "stop a simple container" in {
@@ -41,10 +38,8 @@ class DockerRunnerTest extends FlatSpec with Eventually with Matchers with Befor
     val host = dockerRunner.host()
     val port = startedContainer.tcpPort(80)
     startedContainer.stop()
-    eventually {
-      intercept[Exception] {
-        Await.result(Http(url(s"http://$host:$port/ok") OK as.String), 1 second)
-      }
+    intercept[Exception] {
+      Await.result(Http(url(s"http://$host:$port/ok") OK as.String), 1 second)
     }
   }
 
@@ -54,10 +49,8 @@ class DockerRunnerTest extends FlatSpec with Eventually with Matchers with Befor
     val host = dockerRunner.host()
     val port = startedContainer.tcpPort(80)
     dockerRunner.stopAll()
-    eventually {
-      intercept[Exception] {
-        Await.result(Http(url(s"http://$host:$port/ok") OK as.String), 1 second)
-      }
+    intercept[Exception] {
+      Await.result(Http(url(s"http://$host:$port/ok") OK as.String), 1 second)
     }
   }
 
@@ -67,10 +60,17 @@ class DockerRunnerTest extends FlatSpec with Eventually with Matchers with Befor
     val startedProxy = proxy.start()
     val host = dockerRunner.host()
     val port = startedProxy.tcpPort(80)
-    eventually {
-      val body = Await.result(Http(url(s"http://$host:$port/ok") OK as.String), 1 second)
-      body should be("ok")
-    }
+    val body = Await.result(Http(url(s"http://$host:$port/ok") OK as.String), 1 second)
+    body should be("ok")
+  }
+
+  it should "wait for an initial condition to be met" in {
+    val container = dockerRunner.containerFor("spartans/docker-runner-delayed-startup").build()
+    val startedContainer = container.start()
+    val host = dockerRunner.host()
+    val port = startedContainer.tcpPort(80)
+    Thread.sleep(6000)
+    Await.result(Http(url(s"http://$host:$port") OK as.String), 1 second)
   }
 
 }
