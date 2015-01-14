@@ -17,6 +17,8 @@ public class Container {
     private final String imageName;
     private final Iterable<Link> links;
     private final String host;
+    private Option<String> cpuset;
+    private Option<Memory> memory;
     private StartedContainer startedContainer;
 
     private final BlockUntil noBlock = new BlockUntil() {
@@ -26,11 +28,13 @@ public class Container {
         }
     };
 
-    public Container(DockerClient client, String imageName, Iterable<Link> links, String host) {
+    public Container(DockerClient client, String imageName, Iterable<Link> links, String host, Option<String> cpuset, Option<Memory> memory) {
         this.client = client;
         this.imageName = imageName;
         this.links = links;
         this.host = host;
+        this.cpuset = cpuset;
+        this.memory = memory;
     }
 
     public StartedContainer start() {
@@ -46,10 +50,23 @@ public class Container {
                 }
             }));
             HostConfig hostConfig = HostConfig.builder().publishAllPorts(true).links(concatLinks).build();
-            ContainerConfig containerConfig = ContainerConfig.builder().image(imageName).build();
+            final ContainerConfig.Builder containerConfig = ContainerConfig.builder().image(imageName);
+            cpuset.doIfPresent(new Option.OptionalCommand<String>() {
+                @Override
+                public void apply(String cs) {
+                    containerConfig.cpuset(cs);
+                }
+            });
+            memory.doIfPresent(new Option.OptionalCommand<Memory>() {
+                @Override
+                public void apply(Memory mem) {
+                    containerConfig.memory(mem.toBytes());
+                }
+            });
+
             ContainerCreation container;
             try {
-                container = client.createContainer(containerConfig);
+                container = client.createContainer(containerConfig.build());
                 client.startContainer(container.id(), hostConfig);
             } catch (DockerException | InterruptedException e) {
                 throw new ContainerException(e);

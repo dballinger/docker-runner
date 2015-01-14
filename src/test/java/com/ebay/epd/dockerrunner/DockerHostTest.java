@@ -17,7 +17,7 @@ public class DockerHostTest {
     public void shouldReturnNonTlsB2DHost() throws Exception {
         Map<String, String> env = newHashMap();
         env.put("DOCKER_HOST", "tcp://1.2.3.4:1234");
-        DockerHostFactory.DockerHost dockerHost = DockerHostFactory.dockerHostForEnvironment(env);
+        DockerHostFactory.DockerHost dockerHost = new DockerHostFactory().dockerHostForEnvironment(env);
         assertThat(dockerHost, is(instanceOf(DockerHostFactory.BootToDockerHost.class)));
         assertThat(dockerHost.host(), is("1.2.3.4"));
         assertThat(dockerHost.client(), is(not(nullValue())));
@@ -26,7 +26,7 @@ public class DockerHostTest {
     @Test
     public void shouldReturnANativeHost() throws Exception {
         Map<String, String> env = newHashMap();
-        DockerHostFactory.DockerHost dockerHost = DockerHostFactory.dockerHostForEnvironment(env);
+        DockerHostFactory.DockerHost dockerHost = new DockerHostFactory().dockerHostForEnvironment(env);
         assertThat(dockerHost, is(instanceOf(DockerHostFactory.NativeDockerHost.class)));
         assertThat(dockerHost.host(), is("localhost"));
         assertThat(dockerHost.client(), is(not(nullValue())));
@@ -43,13 +43,13 @@ public class DockerHostTest {
         env.put("DOCKER_HOST", "tcp://1.2.3.4:1234");
         env.put("DOCKER_TLS_VERIFY", "1");
         env.put("DOCKER_CERT_PATH", ".");
-        DockerHostFactory.dockerHostForEnvironment(env);
+        new DockerHostFactory().dockerHostForEnvironment(env);
     }
 
     @Test(expected = DockerHostFactory.DockerHostException.class)
     public void shouldThrowIfUriIsInvalid() throws Exception {
         Map<String, String> env = newHashMap();
         env.put("DOCKER_HOST", "invalid-uri");
-        DockerHostFactory.dockerHostForEnvironment(env);
+        new DockerHostFactory().dockerHostForEnvironment(env);
     }
 }

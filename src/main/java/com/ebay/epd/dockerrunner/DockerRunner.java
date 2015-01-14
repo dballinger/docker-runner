@@ -1,6 +1,7 @@
 package com.ebay.epd.dockerrunner;
 
 import com.ebay.epd.dockerrunner.DockerHostFactory.DockerHost;
+import com.spotify.docker.client.DockerClient;
 import jersey.repackaged.com.google.common.base.Function;
 import jersey.repackaged.com.google.common.collect.Iterables;
 
@@ -10,11 +11,19 @@ import java.util.List;
 import java.util.Map;
 
 public class DockerRunner {
-    private DockerHost host = DockerHostFactory.dockerHostForEnvironment(System.getenv());
-    private List<Container> containers = new ArrayList<>();
+    private final DockerHost host;
+    private final List<Container> containers = new ArrayList<>();
+
+    public DockerRunner() {
+        this(new DockerHostFactory());
+    }
+
+    DockerRunner(DockerHostFactory dockerHostFactory) {
+        this.host = dockerHostFactory.dockerHostForEnvironment(System.getenv());;
+    }
 
     public ContainerBuilder containerFor(String image) {
-        return new ContainerBuilder(image);
+        return new ContainerBuilder(host.client(), image, containers);
     }
 
     public String host() {
@@ -27,19 +36,25 @@ public class DockerRunner {
         }
     }
 
-    public class ContainerBuilder {
-        private String image;
-        private Map<String, Container> linkedContainers = new HashMap<>();
+    class ContainerBuilder {
+        private final DockerClient client;
+        private final String image;
+        private final List<Container> containers;
+        private final Map<String, Container> linkedContainers = new HashMap<>();
+        private Option<String> cpuset = Option.None();
+        private Option<Memory> memory = Option.None();
 
-        public ContainerBuilder(String image) {
+        ContainerBuilder(DockerClient client, String image, List<Container> containers) {
+            this.client = client;
             this.image = image;
+            this.containers = containers;
         }
 
-        public LinkBuilder linkTo(Container container) {
+        LinkBuilder linkTo(Container container) {
             return new LinkBuilder(container);
         }
 
-        public Container build() {
+        Container build() {
             Iterable<Link> links = Iterables.transform(linkedContainers.keySet(), new Function<String, Link>() {
                 @Override
                 public Link apply(String alias) {
@@ -47,9 +62,19 @@ public class DockerRunner {
                     return new Link(name, alias);
                 }
             });
-            Container container = new Container(host.client(), image, links, host());
+            Container container = new Container(client, image, links, host(), cpuset, memory);
             containers.add(container);
             return container;
+        }
+
+        public ContainerBuilder cpuset(String cpuset) {
+            this.cpuset = Option.Some(cpuset);
+            return this;
+        }
+
+        public ContainerBuilder memory(Memory memory) {
+            this.memory = Option.Some(memory);
+            return this;
         }
 
         public class LinkBuilder {

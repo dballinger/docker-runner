@@ -9,12 +9,12 @@ import static org.hamcrest.core.Is.is;
 
 public class ContainerTest {
 
-    private final DockerHostFactory.DockerHost dockerHost = DockerHostFactory.dockerHostForEnvironment(System.getenv());
+    private final DockerHostFactory.DockerHost dockerHost = new DockerHostFactory().dockerHostForEnvironment(System.getenv());
     private final DockerClient client = dockerHost.client();
 
     @Test
     public void shouldStartAndStopAContainer() throws Exception {
-        Container container = new Container(client, "spartans/docker-runner-image1", Lists.<Link>newArrayList(), dockerHost.host());
+        Container container = new Container(client, "spartans/docker-runner-image1", Lists.<Link>newArrayList(), dockerHost.host(), Option.<String>None(), Option.<Memory>None());
         int initialNumberOfRunningContainers = client.listContainers().size();
         Container.StartedContainer startedContainer = container.start();
         int numberOfRunningContainersAfterStart = client.listContainers().size();
@@ -26,7 +26,7 @@ public class ContainerTest {
 
     @Test
     public void shouldOnlyStartContainerOnce() throws Exception {
-        Container container = new Container(client, "spartans/docker-runner-image1", Lists.<Link>newArrayList(), dockerHost.host());
+        Container container = new Container(client, "spartans/docker-runner-image1", Lists.<Link>newArrayList(), dockerHost.host(), Option.<String>None(), Option.<Memory>None());
         Container.StartedContainer startedContainer1 = container.start();
 
         int numberOfRunningContainersAfterFirstStart = client.listContainers().size();

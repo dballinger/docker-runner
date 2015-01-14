@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class DockerHostFactory {
 
-    public static DockerHost dockerHostForEnvironment(Map<String, String> env) {
+    public DockerHost dockerHostForEnvironment(Map<String, String> env) {
         try {
             String hostKey = "DOCKER_HOST";
             String tlsVerifyKey = "DOCKER_TLS_VERIFY";
