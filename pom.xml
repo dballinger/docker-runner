@@ -12,6 +12,17 @@
         <scala.version>2.11.4</scala.version>
     </properties>
 
+    <distributionManagement>
+        <snapshotRepository>
+            <id>nxraptor-snapshots</id>
+            <url>http://ebaycentral/content/repositories/snapshots/</url>
+        </snapshotRepository>
+        <repository>
+            <id>nxraptor-releases</id>
+            <url>http://ebaycentral/content/repositories/releases/</url>
+        </repository>
+    </distributionManagement>
+
     <dependencies>
         <dependency>
             <groupId>com.spotify</groupId>
