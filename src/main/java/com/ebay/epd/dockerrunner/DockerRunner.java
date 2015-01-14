@@ -47,7 +47,7 @@ public class DockerRunner {
                     return new Link(name, alias);
                 }
             });
-            Container container = new Container(host.client(), image, links);
+            Container container = new Container(host.client(), image, links, host());
             containers.add(container);
             return container;
         }

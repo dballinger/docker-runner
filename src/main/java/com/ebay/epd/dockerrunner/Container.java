@@ -13,21 +13,32 @@ import java.util.List;
 import static com.google.common.collect.Lists.newArrayList;
 
 public class Container {
-    private DockerClient client;
-    private String imageName;
-    private Iterable<Link> links;
+    private final DockerClient client;
+    private final String imageName;
+    private final Iterable<Link> links;
+    private final String host;
     private StartedContainer startedContainer;
 
-    public Container(DockerClient client, String imageName, Iterable<Link> links) {
+    private final BlockUntil noBlock = new BlockUntil() {
+        @Override
+        public boolean conditionMet(String host, StartedContainer container) {
+            return true;
+        }
+    };
+
+    public Container(DockerClient client, String imageName, Iterable<Link> links, String host) {
         this.client = client;
         this.imageName = imageName;
         this.links = links;
+        this.host = host;
     }
 
     public StartedContainer start() {
-        if (startedContainer != null) {
-            return startedContainer;
-        } else {
+        return start(noBlock);
+    }
+
+    public StartedContainer start(BlockUntil blockUntil) {
+        if (startedContainer == null) {
             List<String> concatLinks = newArrayList(Iterables.transform(links, new Function<Link, String>() {
                 @Override
                 public String apply(Link link) {
@@ -44,8 +55,25 @@ public class Container {
                 throw new ContainerException(e);
             }
             startedContainer = new StartedContainer(client, container.id());
-            return startedContainer;
         }
+        waitFor(blockUntil);
+        return startedContainer;
+    }
+
+    private void waitFor(BlockUntil blockUntil) {
+        try {
+            if(blockUntil.conditionMet(host, startedContainer)) {
+                return;
+            }
+        } catch (Exception e) {
+            //Exception is equivalent to false... carry on.
+        }
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            //Do we need to worry about this?
+        }
+        waitFor(blockUntil);
     }
 
     void stopIfStarted() {
