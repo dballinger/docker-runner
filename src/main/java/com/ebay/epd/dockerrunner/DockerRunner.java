@@ -50,11 +50,11 @@ public class DockerRunner {
             this.containers = containers;
         }
 
-        LinkBuilder linkTo(Container container) {
+        public LinkBuilder linkTo(Container container) {
             return new LinkBuilder(container);
         }
 
-        Container build() {
+        public Container build() {
             Iterable<Link> links = Iterables.transform(linkedContainers.keySet(), new Function<String, Link>() {
                 @Override
                 public Link apply(String alias) {
