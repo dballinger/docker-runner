@@ -22,7 +22,7 @@ public class DockerRunnerTest {
     @Test
     public void shouldStartASimpleContainer() throws Exception {
         Container container = dockerRunner.containerFor("spartans/docker-runner-image1").build();
-        Container.StartedContainer startedContainer = container.start();
+        Container.StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200());
         String host = dockerRunner.host();
         int port = startedContainer.tcpPort(80);
         String url = String.format("http://%s:%s/ok", host, port);
@@ -33,7 +33,7 @@ public class DockerRunnerTest {
     @Test(expected = Exception.class)
     public void shouldStopAContainer() throws Exception {
         Container container = dockerRunner.containerFor("spartans/docker-runner-image1").build();
-        Container.StartedContainer startedContainer = container.start();
+        Container.StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200());
         String host = dockerRunner.host();
         int port = startedContainer.tcpPort(80);
         startedContainer.stop();
@@ -44,7 +44,7 @@ public class DockerRunnerTest {
     @Test(expected = Exception.class)
     public void shouldStopAContainerUsingTheRunner() throws Exception {
         Container container = dockerRunner.containerFor("spartans/docker-runner-image1").build();
-        Container.StartedContainer startedContainer = container.start();
+        Container.StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200());
         String host = dockerRunner.host();
         int port = startedContainer.tcpPort(80);
         dockerRunner.stopAll();
@@ -56,7 +56,7 @@ public class DockerRunnerTest {
     public void shouldStartALinkedContainer() throws Exception {
         Container upstream = dockerRunner.containerFor("spartans/docker-runner-image1").build();
         Container proxy = dockerRunner.containerFor("spartans/docker-runner-proxy").linkTo(upstream).withAlias("root").build();
-        Container.StartedContainer startedProxy = proxy.start();
+        Container.StartedContainer startedProxy = proxy.start(blockUntilHttpGetReturns200());
         String host = dockerRunner.host();
         int port = startedProxy.tcpPort(80);
         String url = String.format("http://%s:%s/ok", host, port);
@@ -66,6 +66,7 @@ public class DockerRunnerTest {
 
     @Test
     public void shouldWaitForAInitialConditionToBeMet() throws Exception {
+        //This image sleeps for 5 seconds before starting the webserver.
         Container container = dockerRunner.containerFor("spartans/docker-runner-delayed-startup").build();
         Container.StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200());
         String host = dockerRunner.host();
