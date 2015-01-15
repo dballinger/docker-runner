@@ -9,4 +9,12 @@ public class MemoryUnits {
             }
         };
     }
+    public static Memory gigabytes(final int gig) {
+        return new Memory() {
+            @Override
+            public long toBytes() {
+                return gig * 1024 * 1024 * 1024;
+            }
+        };
+    }
 }

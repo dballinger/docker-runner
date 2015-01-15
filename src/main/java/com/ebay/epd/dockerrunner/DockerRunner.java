@@ -36,13 +36,14 @@ public class DockerRunner {
         }
     }
 
-    class ContainerBuilder {
+    public class ContainerBuilder {
         private final DockerClient client;
         private final String image;
         private final List<Container> containers;
         private final Map<String, Container> linkedContainers = new HashMap<>();
         private Option<String> cpuset = Option.None();
         private Option<Memory> memory = Option.None();
+        private List<Container.Env> envs = new ArrayList<>();
 
         ContainerBuilder(DockerClient client, String image, List<Container> containers) {
             this.client = client;
@@ -58,11 +59,10 @@ public class DockerRunner {
             Iterable<Link> links = Iterables.transform(linkedContainers.keySet(), new Function<String, Link>() {
                 @Override
                 public Link apply(String alias) {
-                    String name = linkedContainers.get(alias).start().name();
-                    return new Link(name, alias);
+                    return new Link(alias, linkedContainers.get(alias).start());
                 }
             });
-            Container container = new Container(client, image, links, host(), cpuset, memory);
+            Container container = new Container(client, image, links, host(), cpuset, memory, envs);
             containers.add(container);
             return container;
         }
@@ -74,6 +74,11 @@ public class DockerRunner {
 
         public ContainerBuilder memory(Memory memory) {
             this.memory = Option.Some(memory);
+            return this;
+        }
+
+        public ContainerBuilder env(String key, String value) {
+            envs.add(new Container.Env(key, value));
             return this;
         }
 

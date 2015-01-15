@@ -2,10 +2,10 @@ package com.ebay.epd.dockerrunner;
 
 class Link {
     final String alias;
-    final String name;
+    final StartedContainer container;
 
-    Link(String name, String alias) {
-        this.name = name;
+    Link(String alias, StartedContainer container) {
+        this.container = container;
         this.alias = alias;
     }
 }

@@ -14,9 +14,9 @@ public class ContainerTest {
 
     @Test
     public void shouldStartAndStopAContainer() throws Exception {
-        Container container = new Container(client, "spartans/docker-runner-image1", Lists.<Link>newArrayList(), dockerHost.host(), Option.<String>None(), Option.<Memory>None());
+        Container container = new Container(client, "spartans/docker-runner-image1", Lists.<Link>newArrayList(), dockerHost.host(), Option.<String>None(), Option.<Memory>None(), Lists.<Container.Env>newArrayList());
         int initialNumberOfRunningContainers = client.listContainers().size();
-        Container.StartedContainer startedContainer = container.start();
+        StartedContainer startedContainer = container.start();
         int numberOfRunningContainersAfterStart = client.listContainers().size();
         startedContainer.stop();
         int finalNumberOfRunningContainers = client.listContainers().size();
@@ -26,11 +26,11 @@ public class ContainerTest {
 
     @Test
     public void shouldOnlyStartContainerOnce() throws Exception {
-        Container container = new Container(client, "spartans/docker-runner-image1", Lists.<Link>newArrayList(), dockerHost.host(), Option.<String>None(), Option.<Memory>None());
-        Container.StartedContainer startedContainer1 = container.start();
+        Container container = new Container(client, "spartans/docker-runner-image1", Lists.<Link>newArrayList(), dockerHost.host(), Option.<String>None(), Option.<Memory>None(), Lists.<Container.Env>newArrayList());
+        StartedContainer startedContainer1 = container.start();
 
         int numberOfRunningContainersAfterFirstStart = client.listContainers().size();
-        Container.StartedContainer startedContainer2 = container.start();
+        StartedContainer startedContainer2 = container.start();
         int numberOfRunningContainersAfterSecondStart = client.listContainers().size();
         startedContainer1.stop();
         startedContainer2.stop();
