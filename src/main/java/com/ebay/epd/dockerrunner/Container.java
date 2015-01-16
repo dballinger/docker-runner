@@ -31,6 +31,7 @@ public class Container {
             return true;
         }
     };
+    private String id;
 
     public Container(DockerClient client, String imageName, Iterable<Link> links, String host, Option<String> cpuset, Option<Memory> memory, List<Env> envs) {
         this.client = client;
@@ -78,7 +79,8 @@ public class Container {
             ContainerCreation container;
             try {
                 container = client.createContainer(containerConfig.build());
-                client.startContainer(container.id(), hostConfig);
+                id = container.id();
+                client.startContainer(id, hostConfig);
             } catch (DockerException | InterruptedException e) {
                 throw new ContainerException(e);
             }
@@ -101,7 +103,13 @@ public class Container {
             //Exception is equivalent to false... carry on.
         }
         if (System.currentTimeMillis() > timeToStop) {
-            throw new ContainerStartupTimeoutException();
+            String logMessage;
+            try {
+                logMessage = client.logs(id, DockerClient.LogsParameter.STDOUT, DockerClient.LogsParameter.STDERR).readFully();
+            } catch (DockerException|InterruptedException e) {
+                logMessage = "An error occurred trying to pull the logs from the docker container.";
+            }
+            throw new ContainerStartupTimeoutException(logMessage);
         }
         try {
             Thread.sleep(100);
@@ -134,5 +142,16 @@ public class Container {
     }
 
     public static class ContainerStartupTimeoutException extends RuntimeException {
+
+        private final String logMessage;
+
+        public ContainerStartupTimeoutException(String logMessage) {
+            this.logMessage = logMessage;
+        }
+
+        public String containerLog() {
+            return logMessage;
+        }
     }
+
 }
