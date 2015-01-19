@@ -1,5 +1,5 @@
 package com.ebay.epd.dockerrunner;
 
 public interface BlockUntil {
-    boolean conditionMet(String host, StartedContainer container);
+    boolean conditionMet(DockerContext context);
 }

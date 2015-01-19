@@ -27,7 +27,7 @@ public class Container {
 
     private final BlockUntil noBlock = new BlockUntil() {
         @Override
-        public boolean conditionMet(String host, StartedContainer container) {
+        public boolean conditionMet(DockerContext context) {
             return true;
         }
     };
@@ -95,8 +95,9 @@ public class Container {
     }
 
     private void waitFor(BlockUntil blockUntil, long timeToStop) {
+        DockerContext context = new DockerContext(host, startedContainer);
         try {
-            if (blockUntil.conditionMet(host, startedContainer)) {
+            if (blockUntil.conditionMet(context)) {
                 return;
             }
         } catch (Exception e) {

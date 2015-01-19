@@ -103,8 +103,8 @@ public class DockerRunnerTest {
     private BlockUntil blockUntilHttpGetReturns200() {
         return new BlockUntil() {
             @Override
-            public boolean conditionMet(String host, StartedContainer container) {
-                return client.target(String.format("http://%s:%s", host, container.tcpPort(80))).request().get().getStatus() == 200;
+            public boolean conditionMet(DockerContext context) {
+                return client.target(String.format("http://%s:%s", context.host(), context.container().tcpPort(80))).request().get().getStatus() == 200;
             }
         };
     }
