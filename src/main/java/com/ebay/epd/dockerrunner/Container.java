@@ -24,6 +24,7 @@ public class Container {
     private Option<Memory> memory;
     private List<Env> envs;
     private StartedContainer startedContainer;
+    private Option<String> dns;
 
     private final BlockUntil noBlock = new BlockUntil() {
         @Override
@@ -33,7 +34,7 @@ public class Container {
     };
     private String id;
 
-    public Container(DockerClient client, String imageName, Iterable<Link> links, String host, Option<String> cpuset, Option<Memory> memory, List<Env> envs) {
+    public Container(DockerClient client, String imageName, Iterable<Link> links, String host, Option<String> cpuset, Option<Memory> memory, List<Env> envs, Option<String> dns) {
         this.client = client;
         this.imageName = imageName;
         this.links = links;
@@ -41,6 +42,7 @@ public class Container {
         this.cpuset = cpuset;
         this.memory = memory;
         this.envs = envs;
+        this.dns = dns;
     }
 
     public StartedContainer start() {
@@ -61,7 +63,14 @@ public class Container {
                     return String.format("%s=%s", input.key, input.value);
                 }
             });
-            HostConfig hostConfig = HostConfig.builder().publishAllPorts(true).links(concatLinks).build();
+            final HostConfig.Builder hostConfigBuilder = HostConfig.builder().publishAllPorts(true).links(concatLinks);
+            dns.doIfPresent(new Option.OptionalCommand<String>() {
+                @Override
+                public void apply(String dns) {
+                    hostConfigBuilder.dns(dns);
+                }
+            });
+            final HostConfig hostConfig = hostConfigBuilder.build();
             final ContainerConfig.Builder containerConfig = ContainerConfig.builder().image(imageName).env(envStrs);
             cpuset.doIfPresent(new Option.OptionalCommand<String>() {
                 @Override
@@ -76,6 +85,7 @@ public class Container {
                 }
             });
 
+
             ContainerCreation container;
             try {
                 container = client.createContainer(containerConfig.build());
@@ -88,7 +98,7 @@ public class Container {
             for (Link link : links) {
                 linkedContainers.put(link.alias, link.container);
             }
-            startedContainer = new StartedContainer(client, container.id(), linkedContainers);
+            startedContainer = new StartedContainer(client, container.id(), linkedContainers, hostConfig);
         }
         waitFor(blockUntil, System.currentTimeMillis() + secondsTimeout * 1000);
         return startedContainer;

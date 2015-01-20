@@ -2,6 +2,7 @@ package com.ebay.epd.dockerrunner;
 
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.DockerException;
+import com.spotify.docker.client.messages.HostConfig;
 
 import java.util.Collection;
 import java.util.Map;
@@ -11,11 +12,13 @@ public class StartedContainer {
     private final DockerClient client;
     private final String id;
     private final Map<String, StartedContainer> linkedContainers;
+    private final HostConfig hostConfig;
 
-    public StartedContainer(DockerClient client, String id, Map<String, StartedContainer> linkedContainers) {
+    public StartedContainer(DockerClient client, String id, Map<String, StartedContainer> linkedContainers, HostConfig hostConfig) {
         this.client = client;
         this.id = id;
         this.linkedContainers = linkedContainers;
+        this.hostConfig = hostConfig;
     }
 
     public int tcpPort(int containerPort) {
@@ -49,5 +52,9 @@ public class StartedContainer {
 
     Collection<StartedContainer> linkedContainers() {
         return linkedContainers.values();
+    }
+
+    public HostConfig hostConfig() {
+        return hostConfig;
     }
 }

@@ -14,7 +14,7 @@ public class ContainerTest {
 
     @Test
     public void shouldStartAndStopAContainer() throws Exception {
-        Container container = new Container(client, "commregistry-slc.corp.ebay.com/spartans/docker-runner-image1", Lists.<Link>newArrayList(), dockerHost.host(), Option.<String>None(), Option.<Memory>None(), Lists.<Container.Env>newArrayList());
+        Container container = new Container(client, "commregistry-slc.corp.ebay.com/spartans/docker-runner-image1", Lists.<Link>newArrayList(), dockerHost.host(), Option.<String>None(), Option.<Memory>None(), Lists.<Container.Env>newArrayList(), Option.<String>None());
         int initialNumberOfRunningContainers = client.listContainers().size();
         StartedContainer startedContainer = container.start();
         int numberOfRunningContainersAfterStart = client.listContainers().size();
@@ -26,7 +26,7 @@ public class ContainerTest {
 
     @Test
     public void shouldOnlyStartContainerOnce() throws Exception {
-        Container container = new Container(client, "commregistry-slc.corp.ebay.com/spartans/docker-runner-image1", Lists.<Link>newArrayList(), dockerHost.host(), Option.<String>None(), Option.<Memory>None(), Lists.<Container.Env>newArrayList());
+        Container container = new Container(client, "commregistry-slc.corp.ebay.com/spartans/docker-runner-image1", Lists.<Link>newArrayList(), dockerHost.host(), Option.<String>None(), Option.<Memory>None(), Lists.<Container.Env>newArrayList(), Option.<String>None());
         StartedContainer startedContainer1 = container.start();
 
         int numberOfRunningContainersAfterFirstStart = client.listContainers().size();

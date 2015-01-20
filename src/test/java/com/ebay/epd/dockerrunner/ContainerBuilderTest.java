@@ -13,6 +13,8 @@ import java.util.Map;
 
 import static com.ebay.epd.dockerrunner.MemoryUnits.megabytes;
 import static com.google.common.collect.Lists.newArrayList;
+import static org.hamcrest.CoreMatchers.hasItems;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
 public class ContainerBuilderTest {
@@ -69,11 +71,10 @@ public class ContainerBuilderTest {
 
     @Test
     public void shouldSpecifyDns() throws Exception {
-//        String dnsHost = "10.252.78.11";
-//        dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-image1").dns(dnsHost).build().start().stop();
-//
-//        verify(spyClient).createContainer(argThat(hasDns(dnsHost)));
-//        verify(spyClient).inspectContainer().hostConfig()
+        String dnsHost = "10.252.78.11";
+        StartedContainer container = dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-image1").dns(dnsHost).build().start();
+        container.stop();
+        assertThat(container.hostConfig().dns(), hasItems(dnsHost));
     }
 
     private Matcher<ContainerConfig> hasEnv(final List<String> expectedEnv) {

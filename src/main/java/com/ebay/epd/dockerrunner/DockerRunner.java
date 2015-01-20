@@ -44,6 +44,7 @@ public class DockerRunner {
         private Option<String> cpuset = Option.None();
         private Option<Memory> memory = Option.None();
         private List<Container.Env> envs = new ArrayList<>();
+        private Option<String> dns = Option.None();
 
         ContainerBuilder(DockerClient client, String image, List<Container> containers) {
             this.client = client;
@@ -62,7 +63,7 @@ public class DockerRunner {
                     return new Link(alias, linkedContainers.get(alias).start());
                 }
             });
-            Container container = new Container(client, image, links, host(), cpuset, memory, envs);
+            Container container = new Container(client, image, links, host(), cpuset, memory, envs, dns);
             containers.add(container);
             return container;
         }
@@ -79,6 +80,11 @@ public class DockerRunner {
 
         public ContainerBuilder env(String key, String value) {
             envs.add(new Container.Env(key, value));
+            return this;
+        }
+
+        public ContainerBuilder dns(String dns){
+            this.dns = Option.Some(dns);
             return this;
         }
 
