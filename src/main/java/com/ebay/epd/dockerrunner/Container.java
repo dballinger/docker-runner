@@ -107,9 +107,13 @@ public class Container {
             String logMessage;
             try {
                 logMessage = client.logs(id, DockerClient.LogsParameter.STDOUT, DockerClient.LogsParameter.STDERR).readFully();
-            } catch (DockerException|InterruptedException e) {
+            } catch (DockerException | InterruptedException e) {
                 logMessage = "An error occurred trying to pull the logs from the docker container.";
             }
+            for (StartedContainer linkedContainer : startedContainer.linkedContainers()) {
+                linkedContainer.stop();
+            }
+            startedContainer.stop();
             throw new ContainerStartupTimeoutException(logMessage);
         }
         try {

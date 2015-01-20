@@ -3,6 +3,7 @@ package com.ebay.epd.dockerrunner;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.DockerException;
 
+import java.util.Collection;
 import java.util.Map;
 
 public class StartedContainer {
@@ -44,5 +45,9 @@ public class StartedContainer {
 
     public StartedContainer linkedContainerWithAlias(String alias) {
         return linkedContainers.get(alias);
+    }
+
+    Collection<StartedContainer> linkedContainers() {
+        return linkedContainers.values();
     }
 }

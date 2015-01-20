@@ -1,5 +1,6 @@
 package com.ebay.epd.dockerrunner;
 
+import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.shaded.javax.ws.rs.client.Client;
 import com.spotify.docker.client.shaded.javax.ws.rs.client.ClientBuilder;
 import org.junit.AfterClass;
@@ -23,7 +24,7 @@ public class DockerRunnerTest {
     @Test
     public void shouldStartASimpleContainer() throws Exception {
         Container container = dockerRunner.containerFor("spartans/docker-runner-image1").build();
-        StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(),3);
+        StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(), 3);
         String host = dockerRunner.host();
         int port = startedContainer.tcpPort(80);
         String url = String.format("http://%s:%s/ok", host, port);
@@ -34,7 +35,7 @@ public class DockerRunnerTest {
     @Test(expected = Exception.class)
     public void shouldStopAContainer() throws Exception {
         Container container = dockerRunner.containerFor("spartans/docker-runner-image1").build();
-        StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(),3);
+        StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(), 3);
         String host = dockerRunner.host();
         int port = startedContainer.tcpPort(80);
         startedContainer.stop();
@@ -45,7 +46,7 @@ public class DockerRunnerTest {
     @Test(expected = Exception.class)
     public void shouldStopAContainerUsingTheRunner() throws Exception {
         Container container = dockerRunner.containerFor("spartans/docker-runner-image1").build();
-        StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(),3);
+        StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(), 3);
         String host = dockerRunner.host();
         int port = startedContainer.tcpPort(80);
         dockerRunner.stopAll();
@@ -98,6 +99,23 @@ public class DockerRunnerTest {
         //This image sleeps for 5 seconds before starting the webserver.
         Container container = dockerRunner.containerFor("spartans/docker-runner-delayed-startup").build();
         container.start(blockUntilHttpGetReturns200(), 1);
+    }
+
+    @Test
+    public void shouldShutdownStartedAndLinkedContainersInCaseOfAStartupTimeout() throws Exception {
+        DockerClient dockerClient = new DockerHostFactory().dockerHostForEnvironment(System.getenv()).client();
+        int initialNumberOfContainers = dockerClient.listContainers().size();
+        Container linked = dockerRunner.containerFor("spartans/docker-runner-image1").build();
+        Container mainContainer = dockerRunner.containerFor("spartans/docker-runner-delayed-startup")
+                                   .linkTo(linked).withAlias("whatever")
+                                   .build();
+        try {
+            mainContainer.start(blockUntilHttpGetReturns200(), 2);
+        } catch (Exception e) {
+            //this is ok
+        }
+        int numberOfCreatedContainers = dockerClient.listContainers().size() - initialNumberOfContainers;
+        assertThat(numberOfCreatedContainers, is(0));
     }
 
     private BlockUntil blockUntilHttpGetReturns200() {
