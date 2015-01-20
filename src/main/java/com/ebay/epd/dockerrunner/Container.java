@@ -96,32 +96,33 @@ public class Container {
 
     private void waitFor(BlockUntil blockUntil, long timeToStop) {
         DockerContext context = new DockerContext(host, startedContainer);
-        try {
-            if (blockUntil.conditionMet(context)) {
-                return;
-            }
-        } catch (Exception e) {
-            //Exception is equivalent to false... carry on.
-        }
-        if (System.currentTimeMillis() > timeToStop) {
-            String logMessage;
+        while(true) {
             try {
-                logMessage = client.logs(id, DockerClient.LogsParameter.STDOUT, DockerClient.LogsParameter.STDERR).readFully();
-            } catch (DockerException | InterruptedException e) {
-                logMessage = "An error occurred trying to pull the logs from the docker container.";
+                if (blockUntil.conditionMet(context)) {
+                    return;
+                }
+            } catch (Exception e) {
+                //Exception is equivalent to false... carry on.
             }
-            for (StartedContainer linkedContainer : startedContainer.linkedContainers()) {
-                linkedContainer.stop();
+            if (System.currentTimeMillis() > timeToStop) {
+                String logMessage;
+                try {
+                    logMessage = client.logs(id, DockerClient.LogsParameter.STDOUT, DockerClient.LogsParameter.STDERR).readFully();
+                } catch (DockerException | InterruptedException e) {
+                    logMessage = "An error occurred trying to pull the logs from the docker container.";
+                }
+                for (StartedContainer linkedContainer : startedContainer.linkedContainers()) {
+                    linkedContainer.stop();
+                }
+                startedContainer.stop();
+                throw new ContainerStartupTimeoutException(logMessage);
             }
-            startedContainer.stop();
-            throw new ContainerStartupTimeoutException(logMessage);
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                //Do we need to worry about this?
+            }
         }
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            //Do we need to worry about this?
-        }
-        waitFor(blockUntil, timeToStop);
     }
 
     void stopIfStarted() {
