@@ -42,14 +42,14 @@ public class ContainerBuilderTest {
     @Test
     public void shouldSpecifyCpusets() throws Exception {
         String cpuset = "0,1";
-        dockerRunner.containerFor("spartans/docker-runner-image1").cpuset(cpuset).build().start().stop();
+        dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-image1").cpuset(cpuset).build().start().stop();
         verify(spyClient).createContainer(argThat(hasCpuset(cpuset)));
     }
 
     @Test
     public void shouldSpecifyMemory() throws Exception {
         long oneMeg = 104857600;
-        dockerRunner.containerFor("spartans/docker-runner-image1").memory(megabytes(100)).build().start().stop();
+        dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-image1").memory(megabytes(100)).build().start().stop();
         verify(spyClient).createContainer(argThat(hasMemory(oneMeg)));
     }
 
@@ -59,12 +59,21 @@ public class ContainerBuilderTest {
         String value1 = "value1";
         String key2 = "key2";
         String value2 = "value2";
-        dockerRunner.containerFor("spartans/docker-runner-image1").env(key1, value1).env(key2, value2).build().start().stop();
+        dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-image1").env(key1, value1).env(key2, value2).build().start().stop();
         List<String> expectedEnv = newArrayList(
                                                 key1 + "=" + value1,
                                                 key2 + "=" + value2
         );
         verify(spyClient).createContainer(argThat(hasEnv(expectedEnv)));
+    }
+
+    @Test
+    public void shouldSpecifyDns() throws Exception {
+//        String dnsHost = "10.252.78.11";
+//        dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-image1").dns(dnsHost).build().start().stop();
+//
+//        verify(spyClient).createContainer(argThat(hasDns(dnsHost)));
+//        verify(spyClient).inspectContainer().hostConfig()
     }
 
     private Matcher<ContainerConfig> hasEnv(final List<String> expectedEnv) {
@@ -94,6 +103,20 @@ public class ContainerBuilderTest {
             }
         };
     }
+
+//    private Matcher<ContainerConfig> hasDns(final String host) {
+//        return new TypeSafeMatcher<ContainerConfig>() {
+//            @Override
+//            protected boolean matchesSafely(ContainerConfig config) {
+//                return host.equals(conf);
+//            }
+//
+//            @Override
+//            public void describeTo(Description description) {
+//                description.appendText("ContainerConfig with dns: ").appendValue(host);
+//            }
+//        };
+//    }
 
     private Matcher<ContainerConfig> hasMemory(final long bytes) {
         return new TypeSafeMatcher<ContainerConfig>() {
