@@ -1,49 +1,43 @@
 package com.ebay.epd.dockerrunner;
 
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.DockerException;
-import com.spotify.docker.client.messages.HostConfig;
-
 import java.util.Collection;
 import java.util.Map;
 
 public class StartedContainer {
 
-    private final DockerClient client;
     private final String id;
     private final Map<String, StartedContainer> linkedContainers;
-    private final HostConfig hostConfig;
 
-    public StartedContainer(DockerClient client, String id, Map<String, StartedContainer> linkedContainers, HostConfig hostConfig) {
-        this.client = client;
+    public StartedContainer(String id, Map<String, StartedContainer> linkedContainers) {
         this.id = id;
         this.linkedContainers = linkedContainers;
-        this.hostConfig = hostConfig;
     }
 
     public int tcpPort(int containerPort) {
-        try {
-            String portString = client.inspectContainer(id).networkSettings().ports().get(String.format("%s/tcp", containerPort)).get(0).hostPort();
-            return Integer.parseInt(portString);
-        } catch (DockerException | InterruptedException e) {
-            throw new Container.ContainerException(e);
-        }
+//        try {
+//            String portString = client.inspectContainer(id).networkSettings().ports().get(String.format("%s/tcp", containerPort)).get(0).hostPort();
+//            return Integer.parseInt(portString);
+//        } catch (DockerException | InterruptedException e) {
+//            throw new Container.ContainerException(e);
+//        }
+        throw new UnsupportedOperationException();
     }
 
     public void stop() {
-        try {
-            client.stopContainer(id, 1);
-        } catch (DockerException | InterruptedException e) {
-            throw new Container.ContainerException(e);
-        }
+//        try {
+//            client.stopContainer(id, 1);
+//        } catch (DockerException | InterruptedException e) {
+//            throw new Container.ContainerException(e);
+//        }
     }
 
     public String name() {
-        try {
-            return client.inspectContainer(id).name();
-        } catch (DockerException | InterruptedException e) {
-            throw new Container.ContainerException(e);
-        }
+//        try {
+//            return client.inspectContainer(id).name();
+//        } catch (DockerException | InterruptedException e) {
+//            throw new Container.ContainerException(e);
+//        }
+        throw new UnsupportedOperationException();
     }
 
     public StartedContainer linkedContainerWithAlias(String alias) {
@@ -54,7 +48,7 @@ public class StartedContainer {
         return linkedContainers.values();
     }
 
-    public HostConfig hostConfig() {
-        return hostConfig;
-    }
+//    public HostConfig hostConfig() {
+//        return hostConfig;
+//    }
 }

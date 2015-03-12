@@ -1,7 +1,6 @@
 package com.ebay.epd.dockerrunner;
 
 import com.ebay.epd.dockerrunner.DockerHostFactory.DockerHost;
-import com.spotify.docker.client.DockerClient;
 import jersey.repackaged.com.google.common.base.Function;
 import jersey.repackaged.com.google.common.collect.Iterables;
 
@@ -23,7 +22,7 @@ public class DockerRunner {
     }
 
     public ContainerBuilder containerFor(String image) {
-        return new ContainerBuilder(host.client(), image, containers);
+        return new ContainerBuilder(image, containers);
     }
 
     public String host() {
@@ -37,7 +36,7 @@ public class DockerRunner {
     }
 
     public class ContainerBuilder {
-        private final DockerClient client;
+//        private final DockerClient client;
         private final String image;
         private final List<Container> containers;
         private final Map<String, Container> linkedContainers = new HashMap<>();
@@ -46,8 +45,7 @@ public class DockerRunner {
         private List<Container.Env> envs = new ArrayList<>();
         private Option<String> dns = Option.None();
 
-        ContainerBuilder(DockerClient client, String image, List<Container> containers) {
-            this.client = client;
+        ContainerBuilder(String image, List<Container> containers) {
             this.image = image;
             this.containers = containers;
         }
@@ -63,7 +61,7 @@ public class DockerRunner {
                     return new Link(alias, linkedContainers.get(alias).start());
                 }
             });
-            Container container = new Container(client, image, links, host(), cpuset, memory, envs, dns);
+            Container container = new Container(image, links, host(), cpuset, memory, envs, dns);
             containers.add(container);
             return container;
         }

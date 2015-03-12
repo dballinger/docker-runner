@@ -1,20 +1,17 @@
 package com.ebay.epd.dockerrunner;
 
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.shaded.javax.ws.rs.client.Client;
-import com.spotify.docker.client.shaded.javax.ws.rs.client.ClientBuilder;
 import org.junit.AfterClass;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.fail;
 
 public class DockerRunnerTest {
 
     private static final DockerRunner dockerRunner = new DockerRunner();
 
-    private final Client client = ClientBuilder.newClient();
 
     @AfterClass
     public static void afterClass() {
@@ -28,8 +25,9 @@ public class DockerRunnerTest {
         String host = dockerRunner.host();
         int port = startedContainer.tcpPort(80);
         String url = String.format("http://%s:%s/ok", host, port);
-        int status = client.target(url).request().get().getStatus();
-        assertThat(status, is(200));
+//        int status = client.target(url).request().get().getStatus();
+//        assertThat(status, is(200));
+        fail();
     }
 
     @Test(expected = Exception.class)
@@ -40,7 +38,8 @@ public class DockerRunnerTest {
         int port = startedContainer.tcpPort(80);
         startedContainer.stop();
         String url = String.format("http://%s:%s/ok", host, port);
-        client.target(url).request().get().getStatus();
+//        client.target(url).request().get().getStatus();
+        fail();
     }
 
     @Test(expected = Exception.class)
@@ -51,7 +50,8 @@ public class DockerRunnerTest {
         int port = startedContainer.tcpPort(80);
         dockerRunner.stopAll();
         String url = String.format("http://%s:%s/ok", host, port);
-        client.target(url).request().get().getStatus();
+//        client.target(url).request().get().getStatus();
+        fail();
     }
 
     @Test
@@ -62,8 +62,9 @@ public class DockerRunnerTest {
         String host = dockerRunner.host();
         int port = startedProxy.tcpPort(80);
         String url = String.format("http://%s:%s/ok", host, port);
-        int status = client.target(url).request().get().getStatus();
-        assertThat(status, is(200));
+//        int status = client.target(url).request().get().getStatus();
+//        assertThat(status, is(200));
+        fail();
     }
 
     @Test
@@ -90,8 +91,9 @@ public class DockerRunnerTest {
         String host = dockerRunner.host();
         int port = startedContainer.tcpPort(80);
         String url = String.format("http://%s:%s", host, port);
-        int status = client.target(url).request().get().getStatus();
-        assertThat(status, is(200));
+//        int status = client.target(url).request().get().getStatus();
+//        assertThat(status, is(200));
+        fail();
     }
 
     @Test(expected = Container.ContainerStartupTimeoutException.class)
@@ -103,26 +105,15 @@ public class DockerRunnerTest {
 
     @Test
     public void shouldShutdownStartedAndLinkedContainersInCaseOfAStartupTimeout() throws Exception {
-        DockerClient dockerClient = new DockerHostFactory().dockerHostForEnvironment(System.getenv()).client();
-        int initialNumberOfContainers = dockerClient.listContainers().size();
-        Container linked = dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-image1").build();
-        Container mainContainer = dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-delayed-startup")
-                                   .linkTo(linked).withAlias("whatever")
-                                   .build();
-        try {
-            mainContainer.start(blockUntilHttpGetReturns200(), 2);
-        } catch (Exception e) {
-            //this is ok
-        }
-        int numberOfCreatedContainers = dockerClient.listContainers().size() - initialNumberOfContainers;
-        assertThat(numberOfCreatedContainers, is(0));
+        fail();
     }
 
     private BlockUntil blockUntilHttpGetReturns200() {
         return new BlockUntil() {
             @Override
             public boolean conditionMet(DockerContext context) {
-                return client.target(String.format("http://%s:%s", context.host(), context.container().tcpPort(80))).request().get().getStatus() == 200;
+                throw new UnsupportedOperationException();
+//                return client.target(String.format("http://%s:%s", context.host(), context.container().tcpPort(80))).request().get().getStatus() == 200;
             }
         };
     }
