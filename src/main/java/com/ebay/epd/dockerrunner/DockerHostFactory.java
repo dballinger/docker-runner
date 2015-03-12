@@ -1,5 +1,9 @@
 package com.ebay.epd.dockerrunner;
 
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.core.DockerClientBuilder;
+import com.github.dockerjava.core.DockerClientConfig;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
@@ -25,6 +29,8 @@ public class DockerHostFactory {
 
     public static interface DockerHost {
         String host();
+
+        DockerClient client();
     }
 
     public static class BootToDockerHost implements DockerHost {
@@ -42,14 +48,26 @@ public class DockerHostFactory {
         public String host() {
             return host;
         }
+
+        @Override
+        public DockerClient client() {
+            throw new UnsupportedOperationException();
+        }
     }
 
     public static class NativeDockerHost implements DockerHost {
 
-
         @Override
         public String host() {
             return "localhost";
+        }
+
+        @Override
+        public DockerClient client() {
+            DockerClientConfig config = DockerClientConfig.createDefaultConfigBuilder()
+                    .withUri("unix:///var/run/docker.sock")
+                    .build();
+            return DockerClientBuilder.getInstance(config).build();
         }
     }
 
@@ -75,6 +93,11 @@ public class DockerHostFactory {
         @Override
         public String host() {
             return host;
+        }
+
+        @Override
+        public DockerClient client() {
+            throw new UnsupportedOperationException();
         }
     }
 

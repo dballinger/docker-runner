@@ -15,11 +15,13 @@ VOLUME ["/etc/nginx/sites-enabled", "/etc/nginx/certs", "/etc/nginx/conf.d", "/v
 
 ADD ok /var/www/html/ok
 
+ADD start.sh /start.sh
+
 # Define working directory.
 WORKDIR /etc/nginx
 
 # Define default command.
-CMD ["nginx"]
+CMD sh /start.sh
 
 # Expose ports.
 EXPOSE 80

@@ -1,5 +1,10 @@
 package com.ebay.epd.dockerrunner;
 
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.InspectContainerResponse;
+import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.Ports;
+
 import java.util.Collection;
 import java.util.Map;
 
@@ -7,37 +12,26 @@ public class StartedContainer {
 
     private final String id;
     private final Map<String, StartedContainer> linkedContainers;
+    private final DockerClient client;
 
-    public StartedContainer(String id, Map<String, StartedContainer> linkedContainers) {
+    public StartedContainer(DockerClient client, String id, Map<String, StartedContainer> linkedContainers) {
+        this.client = client;
         this.id = id;
         this.linkedContainers = linkedContainers;
     }
 
     public int tcpPort(int containerPort) {
-//        try {
-//            String portString = client.inspectContainer(id).networkSettings().ports().get(String.format("%s/tcp", containerPort)).get(0).hostPort();
-//            return Integer.parseInt(portString);
-//        } catch (DockerException | InterruptedException e) {
-//            throw new Container.ContainerException(e);
-//        }
-        throw new UnsupportedOperationException();
+        InspectContainerResponse inspectContainerResponse = client.inspectContainerCmd(id).exec();
+        Ports.Binding binding = inspectContainerResponse.getNetworkSettings().getPorts().getBindings().get(ExposedPort.tcp(containerPort))[0];
+        return binding.getHostPort();
     }
 
     public void stop() {
-//        try {
-//            client.stopContainer(id, 1);
-//        } catch (DockerException | InterruptedException e) {
-//            throw new Container.ContainerException(e);
-//        }
+        client.stopContainerCmd(id).withTimeout(1).exec();
     }
 
     public String name() {
-//        try {
-//            return client.inspectContainer(id).name();
-//        } catch (DockerException | InterruptedException e) {
-//            throw new Container.ContainerException(e);
-//        }
-        throw new UnsupportedOperationException();
+        return client.inspectContainerCmd(id).exec().getName();
     }
 
     public StartedContainer linkedContainerWithAlias(String alias) {

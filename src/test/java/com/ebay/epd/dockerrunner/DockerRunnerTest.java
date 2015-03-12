@@ -1,8 +1,18 @@
 package com.ebay.epd.dockerrunner;
 
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.Test;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Configuration;
+
+import java.util.UUID;
+
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -12,22 +22,27 @@ public class DockerRunnerTest {
 
     private static final DockerRunner dockerRunner = new DockerRunner();
 
+    private Client client = null;
 
     @AfterClass
     public static void afterClass() {
         dockerRunner.stopAll();
     }
 
+    @Before
+    public void before() {
+        client = ClientBuilder.newClient();
+    }
+
     @Test
     public void shouldStartASimpleContainer() throws Exception {
         Container container = dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-image1").build();
-        StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(), 3);
+        StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(), 30);
         String host = dockerRunner.host();
         int port = startedContainer.tcpPort(80);
         String url = String.format("http://%s:%s/ok", host, port);
-//        int status = client.target(url).request().get().getStatus();
-//        assertThat(status, is(200));
-        fail();
+        int status = client.target(url).request().get().getStatus();
+        assertThat(status, is(200));
     }
 
     @Test(expected = Exception.class)
@@ -38,8 +53,7 @@ public class DockerRunnerTest {
         int port = startedContainer.tcpPort(80);
         startedContainer.stop();
         String url = String.format("http://%s:%s/ok", host, port);
-//        client.target(url).request().get().getStatus();
-        fail();
+        client.target(url).request().get().getStatus();
     }
 
     @Test(expected = Exception.class)
@@ -50,8 +64,7 @@ public class DockerRunnerTest {
         int port = startedContainer.tcpPort(80);
         dockerRunner.stopAll();
         String url = String.format("http://%s:%s/ok", host, port);
-//        client.target(url).request().get().getStatus();
-        fail();
+        client.target(url).request().get().getStatus();
     }
 
     @Test
@@ -62,9 +75,9 @@ public class DockerRunnerTest {
         String host = dockerRunner.host();
         int port = startedProxy.tcpPort(80);
         String url = String.format("http://%s:%s/ok", host, port);
-//        int status = client.target(url).request().get().getStatus();
-//        assertThat(status, is(200));
-        fail();
+        int status = client.target(url).request().get().getStatus();
+        assertThat(status, is(200));
+        Thread.sleep(60000);
     }
 
     @Test
@@ -91,9 +104,8 @@ public class DockerRunnerTest {
         String host = dockerRunner.host();
         int port = startedContainer.tcpPort(80);
         String url = String.format("http://%s:%s", host, port);
-//        int status = client.target(url).request().get().getStatus();
-//        assertThat(status, is(200));
-        fail();
+        int status = client.target(url).request().get().getStatus();
+        assertThat(status, is(200));
     }
 
     @Test(expected = Container.ContainerStartupTimeoutException.class)
@@ -104,16 +116,38 @@ public class DockerRunnerTest {
     }
 
     @Test
-    public void shouldShutdownStartedAndLinkedContainersInCaseOfAStartupTimeout() throws Exception {
-        fail();
+    public void shouldPassEnvVarsToContainer() throws Exception {
+        String expectedValue = UUID.randomUUID().toString();
+        Container container = dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-image1:v2")
+                .env("TEST_VAR", expectedValue)
+                .build();
+        StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(), 3);
+        String host = dockerRunner.host();
+        int port = startedContainer.tcpPort(80);
+        String url = String.format("http://%s:%s/vars.txt", host, port);
+        String actualValue = client.target(url).request().get().readEntity(String.class);
+        assertThat(actualValue, containsString(expectedValue));
+    }
+
+    @Test
+    public void shouldPassDnsToContainer() throws Exception {
+        String expectedDns = "0.1.2.3";
+        Container container = dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-image1:v2")
+                .dns(expectedDns)
+                .build();
+        StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(), 3);
+        String host = dockerRunner.host();
+        int port = startedContainer.tcpPort(80);
+        String url = String.format("http://%s:%s/dns.txt", host, port);
+        String actualDns = client.target(url).request().get().readEntity(String.class);
+        assertThat(actualDns, containsString(expectedDns));
     }
 
     private BlockUntil blockUntilHttpGetReturns200() {
         return new BlockUntil() {
             @Override
             public boolean conditionMet(DockerContext context) {
-                throw new UnsupportedOperationException();
-//                return client.target(String.format("http://%s:%s", context.host(), context.container().tcpPort(80))).request().get().getStatus() == 200;
+                return client.target(String.format("http://%s:%s", context.host(), context.container().tcpPort(80))).request().get().getStatus() == 200;
             }
         };
     }

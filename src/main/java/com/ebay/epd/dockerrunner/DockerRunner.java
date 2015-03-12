@@ -1,6 +1,7 @@
 package com.ebay.epd.dockerrunner;
 
 import com.ebay.epd.dockerrunner.DockerHostFactory.DockerHost;
+import com.github.dockerjava.api.DockerClient;
 import jersey.repackaged.com.google.common.base.Function;
 import jersey.repackaged.com.google.common.collect.Iterables;
 
@@ -22,7 +23,8 @@ public class DockerRunner {
     }
 
     public ContainerBuilder containerFor(String image) {
-        return new ContainerBuilder(image, containers);
+        DockerHost dockerHost = new DockerHostFactory().dockerHostForEnvironment(System.getenv());
+        return new ContainerBuilder(image, containers, dockerHost.client());
     }
 
     public String host() {
@@ -36,18 +38,19 @@ public class DockerRunner {
     }
 
     public class ContainerBuilder {
-//        private final DockerClient client;
         private final String image;
         private final List<Container> containers;
+        private final DockerClient client;
         private final Map<String, Container> linkedContainers = new HashMap<>();
         private Option<String> cpuset = Option.None();
         private Option<Memory> memory = Option.None();
         private List<Container.Env> envs = new ArrayList<>();
         private Option<String> dns = Option.None();
 
-        ContainerBuilder(String image, List<Container> containers) {
+        ContainerBuilder(String image, List<Container> containers, DockerClient client) {
             this.image = image;
             this.containers = containers;
+            this.client = client;
         }
 
         public LinkBuilder linkTo(Container container) {
@@ -61,19 +64,21 @@ public class DockerRunner {
                     return new Link(alias, linkedContainers.get(alias).start());
                 }
             });
-            Container container = new Container(image, links, host(), cpuset, memory, envs, dns);
+            Container container = new Container(client, image, links, host(), cpuset, memory, envs, dns);
             containers.add(container);
             return container;
         }
 
         public ContainerBuilder cpuset(String cpuset) {
-            this.cpuset = Option.Some(cpuset);
-            return this;
+            throw new UnsupportedOperationException();
+//            this.cpuset = Option.Some(cpuset);
+//            return this;
         }
 
         public ContainerBuilder memory(Memory memory) {
-            this.memory = Option.Some(memory);
-            return this;
+            throw new UnsupportedOperationException();
+//            this.memory = Option.Some(memory);
+//            return this;
         }
 
         public ContainerBuilder env(String key, String value) {
