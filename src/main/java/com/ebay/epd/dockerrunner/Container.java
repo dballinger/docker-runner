@@ -1,6 +1,7 @@
 package com.ebay.epd.dockerrunner;
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.NotModifiedException;
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.StartContainerCmd;
 import com.github.dockerjava.api.model.Image;
@@ -167,7 +168,12 @@ public class Container {
 
     void stopIfStarted() {
         if (startedContainer != null) {
-            startedContainer.stop();
+            try {
+                startedContainer.stop();
+            } catch(NotModifiedException e) {
+                //swallow
+                e.printStackTrace();
+            }
         }
     }
 

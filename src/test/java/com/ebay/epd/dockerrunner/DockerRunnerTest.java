@@ -37,7 +37,7 @@ public class DockerRunnerTest {
     @Test
     public void shouldStartASimpleContainer() throws Exception {
         Container container = dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-image1").build();
-        StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(), 30);
+        StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(), 3);
         String host = dockerRunner.host();
         int port = startedContainer.tcpPort(80);
         String url = String.format("http://%s:%s/ok", host, port);
@@ -77,7 +77,6 @@ public class DockerRunnerTest {
         String url = String.format("http://%s:%s/ok", host, port);
         int status = client.target(url).request().get().getStatus();
         assertThat(status, is(200));
-        Thread.sleep(60000);
     }
 
     @Test
