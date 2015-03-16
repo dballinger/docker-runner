@@ -171,8 +171,7 @@ public class Container {
             try {
                 startedContainer.stop();
             } catch(NotModifiedException e) {
-                //swallow
-                e.printStackTrace();
+                //swallow... this is fine!
             }
         }
     }
