@@ -19,6 +19,7 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.google.common.collect.Lists.newArrayList;
 
@@ -81,7 +82,10 @@ public class Container {
                 }
             });
             try {
+                UUID correlationId = UUID.randomUUID();
+                System.out.println(String.format("DockerRunner %s, starting container for image %s at time %s", correlationId, imageName, System.currentTimeMillis()));
                 startContainerCmd.exec();
+                System.out.println(String.format("DockerRunner %s, started container for image %s at time %s", correlationId, imageName, System.currentTimeMillis()));
             } catch (NotModifiedException e) {
                 //swallow... this is fine!
             }
