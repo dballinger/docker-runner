@@ -4,8 +4,11 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.NotFoundException;
 import com.github.dockerjava.api.NotModifiedException;
 import com.github.dockerjava.api.command.CreateContainerCmd;
+import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.command.StartContainerCmd;
+import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.Image;
+import com.github.dockerjava.api.model.Ports;
 import com.github.dockerjava.api.model.SearchItem;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
@@ -85,7 +88,13 @@ public class Container {
                 UUID correlationId = UUID.randomUUID();
                 System.out.println(String.format("DockerRunner %s, starting container for image %s at time %s", correlationId, imageName, System.currentTimeMillis()));
                 startContainerCmd.exec();
-                System.out.println(String.format("DockerRunner %s, started container for image %s at time %s", correlationId, imageName, System.currentTimeMillis()));
+                InspectContainerResponse inspectContainerResponse = client.inspectContainerCmd(id).exec();
+//                System.out.println(String.format("DockerRunner %s, started container for image %s at time %s", correlationId, imageName, System.currentTimeMillis()));
+                for (Ports.Binding[] bindings : inspectContainerResponse.getNetworkSettings().getPorts().getBindings().values()) {
+                    for (Ports.Binding binding : bindings) {
+                        System.out.println(String.format("DockerRunner %s, started container for image %s at time %s with port binding %s", correlationId, imageName, System.currentTimeMillis(), binding.getHostPort()));
+                    }
+                }
             } catch (NotModifiedException e) {
                 //swallow... this is fine!
             }
