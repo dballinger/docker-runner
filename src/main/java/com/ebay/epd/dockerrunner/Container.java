@@ -1,6 +1,7 @@
 package com.ebay.epd.dockerrunner;
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.NotFoundException;
 import com.github.dockerjava.api.NotModifiedException;
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.StartContainerCmd;
@@ -79,7 +80,11 @@ public class Container {
                     startContainerCmd.withDns(dns);
                 }
             });
-            startContainerCmd.exec();
+            try {
+                startContainerCmd.exec();
+            } catch (NotModifiedException e) {
+                //swallow... this is fine!
+            }
             Map<String, StartedContainer> linkedContainers = new HashMap<>();
             for (Link link : links) {
                 linkedContainers.put(link.alias, link.container);
@@ -126,7 +131,7 @@ public class Container {
         BufferedReader reader = new BufferedReader(new InputStreamReader(pullLog));
         String line = null;
         try {
-            while((line = reader.readLine()) != null) {
+            while ((line = reader.readLine()) != null) {
                 System.out.println(line);
             }
         } catch (IOException e) {
@@ -136,7 +141,7 @@ public class Container {
 
     private void waitFor(BlockUntil blockUntil, long timeToStop) {
         DockerContext context = new DockerContext(host, startedContainer);
-        while(true) {
+        while (true) {
             try {
                 if (blockUntil.conditionMet(context)) {
                     return;
@@ -168,11 +173,7 @@ public class Container {
 
     void stopIfStarted() {
         if (startedContainer != null) {
-            try {
-                startedContainer.stop();
-            } catch(NotModifiedException e) {
-                //swallow... this is fine!
-            }
+            startedContainer.stop();
         }
     }
 

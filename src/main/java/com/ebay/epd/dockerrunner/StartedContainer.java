@@ -1,6 +1,7 @@
 package com.ebay.epd.dockerrunner;
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.NotModifiedException;
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.Ports;
@@ -27,7 +28,11 @@ public class StartedContainer {
     }
 
     public void stop() {
-        client.stopContainerCmd(id).withTimeout(1).exec();
+        try {
+            client.stopContainerCmd(id).withTimeout(1).exec();
+        } catch(NotModifiedException e) {
+            //swallow... this is fine!
+        }
     }
 
     public String name() {
