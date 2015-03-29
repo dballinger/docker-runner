@@ -6,7 +6,7 @@
 
     <groupId>com.ebay.epd</groupId>
     <artifactId>docker-runner</artifactId>
-    <version>1.0.12</version>
+    <version>1.0.13</version>
 
     <properties>
         <scala.version>2.11.4</scala.version>

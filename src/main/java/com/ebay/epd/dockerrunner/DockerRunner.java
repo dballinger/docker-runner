@@ -58,6 +58,7 @@ public class DockerRunner {
         private List<Container.Env> envs = new ArrayList<>();
         private Option<String> dns = Option.None();
         private final List<VolumeMapping> volumeMappings = new ArrayList<>();
+        private final List<Integer> additionalPorts = new ArrayList<>();
 
         ContainerBuilder(String image, List<Container> containers, DockerClient client) {
             this.image = image;
@@ -76,7 +77,7 @@ public class DockerRunner {
                     return new Link(alias, linkedContainers.get(alias).start());
                 }
             });
-            Container container = new Container(client, image, links, host(), cpuset, memory, envs, dns, volumeMappings);
+            Container container = new Container(client, image, links, host(), cpuset, memory, envs, dns, volumeMappings, additionalPorts);
             containers.add(container);
             return container;
         }
@@ -105,6 +106,11 @@ public class DockerRunner {
 
         public VolumeBuilder mountHostVolume(String hostPath) {
             return new VolumeBuilder(hostPath);
+        }
+
+        public ContainerBuilder exposing(int additonalPort) {
+            additionalPorts.add(additonalPort);
+            return this;
         }
 
         public class LinkBuilder {

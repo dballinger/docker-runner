@@ -154,6 +154,22 @@ public class DockerRunnerTest {
         assertThat(actualContent, containsString(expectedContent));
     }
 
+    @Test
+    public void shouldExposeAdditionalPorts() throws Exception {
+        int additonalPort = 12345;
+        StartedContainer startedContainer = dockerRunner.containerFor("nginx")
+                                             .exposing(additonalPort)
+                                             .mountHostVolume(new File("src/test/resources/nginx-12345-port/nginx.conf").getAbsolutePath()).toContainerVolume("/etc/nginx/nginx.conf")
+                                             .build()
+                                             .start();
+        String host = dockerRunner.host();
+        int port = startedContainer.tcpPort(additonalPort);
+        String url = String.format("http://%s:%s", host, port);
+        int status = client.target(url).request().get().getStatus();
+
+        assertThat(status, is(200));
+    }
+
     private BlockUntil blockUntilHttpGetReturns200() {
         return new BlockUntil() {
             @Override

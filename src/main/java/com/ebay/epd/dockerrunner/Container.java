@@ -4,10 +4,7 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.NotModifiedException;
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.command.StartContainerCmd;
-import com.github.dockerjava.api.model.Bind;
-import com.github.dockerjava.api.model.Image;
-import com.github.dockerjava.api.model.Ports;
-import com.github.dockerjava.api.model.Volume;
+import com.github.dockerjava.api.model.*;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -33,6 +30,7 @@ public class Container {
     private StartedContainer startedContainer;
     private Option<String> dns;
     private List<DockerRunner.VolumeMapping> volumeMappings;
+    private List<Integer> additionalPorts;
     private final BlockUntil noBlock = new BlockUntil() {
         @Override
         public boolean conditionMet(DockerContext context) {
@@ -41,7 +39,7 @@ public class Container {
     };
     private String id;
 
-    public Container(DockerClient client, String imageName, Iterable<Link> links, String host, Option<String> cpuset, Option<Memory> memory, List<Env> envs, Option<String> dns, List<DockerRunner.VolumeMapping> volumeMappings) {
+    public Container(DockerClient client, String imageName, Iterable<Link> links, String host, Option<String> cpuset, Option<Memory> memory, List<Env> envs, Option<String> dns, List<DockerRunner.VolumeMapping> volumeMappings, List<Integer> additionalPorts) {
         this.client = client;
         this.imageName = imageName;
         this.links = links;
@@ -51,6 +49,7 @@ public class Container {
         this.envs = envs;
         this.dns = dns;
         this.volumeMappings = volumeMappings;
+        this.additionalPorts = additionalPorts;
     }
 
     public StartedContainer start() {
@@ -72,9 +71,16 @@ public class Container {
                     return new Bind(input.hostPath, new Volume(input.containerPath));
                 }
             });
+            List<ExposedPort> exposePorts = Lists.transform(additionalPorts, new Function<Integer, ExposedPort>() {
+                @Override
+                public ExposedPort apply(Integer input) {
+                    return new ExposedPort(input);
+                }
+            });
             id = client
                   .createContainerCmd(imageName)
                   .withEnv(envStrs.toArray(new String[]{}))
+                  .withExposedPorts(exposePorts.toArray(new ExposedPort[]{}))
                   .exec()
                   .getId();
             final StartContainerCmd startContainerCmd = client
