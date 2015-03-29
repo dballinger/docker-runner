@@ -1,15 +1,13 @@
 package com.ebay.epd.dockerrunner;
 
 import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.NotFoundException;
 import com.github.dockerjava.api.NotModifiedException;
-import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.command.StartContainerCmd;
-import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Image;
 import com.github.dockerjava.api.model.Ports;
-import com.github.dockerjava.api.model.SearchItem;
+import com.github.dockerjava.api.model.Volume;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -24,8 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.google.common.collect.Lists.newArrayList;
-
 public class Container {
     private final DockerClient client;
     private final String imageName;
@@ -36,6 +32,7 @@ public class Container {
     private List<Env> envs;
     private StartedContainer startedContainer;
     private Option<String> dns;
+    private List<DockerRunner.VolumeMapping> volumeMappings;
     private final BlockUntil noBlock = new BlockUntil() {
         @Override
         public boolean conditionMet(DockerContext context) {
@@ -44,7 +41,7 @@ public class Container {
     };
     private String id;
 
-    public Container(DockerClient client, String imageName, Iterable<Link> links, String host, Option<String> cpuset, Option<Memory> memory, List<Env> envs, Option<String> dns) {
+    public Container(DockerClient client, String imageName, Iterable<Link> links, String host, Option<String> cpuset, Option<Memory> memory, List<Env> envs, Option<String> dns, List<DockerRunner.VolumeMapping> volumeMappings) {
         this.client = client;
         this.imageName = imageName;
         this.links = links;
@@ -53,6 +50,7 @@ public class Container {
         this.memory = memory;
         this.envs = envs;
         this.dns = dns;
+        this.volumeMappings = volumeMappings;
     }
 
     public StartedContainer start() {
@@ -68,15 +66,22 @@ public class Container {
                     return String.format("%s=%s", input.key, input.value);
                 }
             });
+            List<Bind> volumes = Lists.transform(volumeMappings, new Function<DockerRunner.VolumeMapping, Bind>() {
+                @Override
+                public Bind apply(DockerRunner.VolumeMapping input) {
+                    return new Bind(input.hostPath, new Volume(input.containerPath));
+                }
+            });
             id = client
-                    .createContainerCmd(imageName)
-                    .withEnv(envStrs.toArray(new String[]{}))
-                    .exec()
-                    .getId();
+                  .createContainerCmd(imageName)
+                  .withEnv(envStrs.toArray(new String[]{}))
+                  .exec()
+                  .getId();
             final StartContainerCmd startContainerCmd = client
-                    .startContainerCmd(id)
-                    .withPublishAllPorts(true)
-                    .withLinks(containerLinks());
+                                                         .startContainerCmd(id).withBinds()
+                                                         .withPublishAllPorts(true)
+                                                         .withLinks(containerLinks())
+                                                         .withBinds(volumes.toArray(new Bind[]{}));
 
             dns.doIfPresent(new Option.OptionalCommand<String>() {
                 @Override
@@ -89,7 +94,6 @@ public class Container {
                 System.out.println(String.format("DockerRunner %s, starting container for image %s at time %s", correlationId, imageName, System.currentTimeMillis()));
                 startContainerCmd.exec();
                 InspectContainerResponse inspectContainerResponse = client.inspectContainerCmd(id).exec();
-//                System.out.println(String.format("DockerRunner %s, started container for image %s at time %s", correlationId, imageName, System.currentTimeMillis()));
                 for (Ports.Binding[] bindings : inspectContainerResponse.getNetworkSettings().getPorts().getBindings().values()) {
                     for (Ports.Binding binding : bindings) {
                         System.out.println(String.format("DockerRunner %s, started container for image %s at time %s with port binding %s", correlationId, imageName, System.currentTimeMillis(), binding.getHostPort()));

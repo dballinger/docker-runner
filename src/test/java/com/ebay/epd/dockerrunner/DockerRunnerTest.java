@@ -1,22 +1,18 @@
 package com.ebay.epd.dockerrunner;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.ClientProperties;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.Configuration;
-
+import java.io.File;
 import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.fail;
 
 public class DockerRunnerTest {
 
@@ -36,7 +32,7 @@ public class DockerRunnerTest {
 
     @Test
     public void shouldStartASimpleContainer() throws Exception {
-        Container container = dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-image1").build();
+        Container container = dockerRunner.containerFor("docker-runner/docker-runner-image1:v1").build();
         StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(), 3);
         String host = dockerRunner.host();
         int port = startedContainer.tcpPort(80);
@@ -47,7 +43,7 @@ public class DockerRunnerTest {
 
     @Test(expected = Exception.class)
     public void shouldStopAContainer() throws Exception {
-        Container container = dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-image1").build();
+        Container container = dockerRunner.containerFor("docker-runner/docker-runner-image1:v1").build();
         StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(), 3);
         String host = dockerRunner.host();
         int port = startedContainer.tcpPort(80);
@@ -58,7 +54,7 @@ public class DockerRunnerTest {
 
     @Test(expected = Exception.class)
     public void shouldStopAContainerUsingTheRunner() throws Exception {
-        Container container = dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-image1").build();
+        Container container = dockerRunner.containerFor("docker-runner/docker-runner-image1:v1").build();
         StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(), 3);
         String host = dockerRunner.host();
         int port = startedContainer.tcpPort(80);
@@ -69,8 +65,8 @@ public class DockerRunnerTest {
 
     @Test
     public void shouldStartALinkedContainer() throws Exception {
-        Container upstream = dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-image1").build();
-        Container proxy = dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-proxy").linkTo(upstream).withAlias("root").build();
+        Container upstream = dockerRunner.containerFor("docker-runner/docker-runner-image1:v1").build();
+        Container proxy = dockerRunner.containerFor("docker-runner/docker-runner-proxy:v1").linkTo(upstream).withAlias("root").build();
         StartedContainer startedProxy = proxy.start(blockUntilHttpGetReturns200(), 3);
         String host = dockerRunner.host();
         int port = startedProxy.tcpPort(80);
@@ -81,9 +77,9 @@ public class DockerRunnerTest {
 
     @Test
     public void shouldProvideAStartedLinkedContainer() throws Exception {
-        Container containerA = dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-image1").build();
-        Container containerB = dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-image1").build();
-        Container containerRequiringAandB = dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-image1")
+        Container containerA = dockerRunner.containerFor("docker-runner/docker-runner-image1:v1").build();
+        Container containerB = dockerRunner.containerFor("docker-runner/docker-runner-image1:v1").build();
+        Container containerRequiringAandB = dockerRunner.containerFor("docker-runner/docker-runner-image1:v1")
                                              .linkTo(containerA).withAlias("a")
                                              .linkTo(containerB).withAlias("b")
                                              .build();
@@ -98,7 +94,7 @@ public class DockerRunnerTest {
     @Test
     public void shouldWaitForAInitialConditionToBeMet() throws Exception {
         //This image sleeps for 5 seconds before starting the webserver.
-        Container container = dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-delayed-startup").build();
+        Container container = dockerRunner.containerFor("docker-runner/docker-runner-delayed-startup:v1").build();
         StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(), 7);
         String host = dockerRunner.host();
         int port = startedContainer.tcpPort(80);
@@ -110,16 +106,16 @@ public class DockerRunnerTest {
     @Test(expected = Container.ContainerStartupTimeoutException.class)
     public void shouldTimeoutIfUnableToMeetInitialConditionWithinTimeframe() throws Exception {
         //This image sleeps for 5 seconds before starting the webserver.
-        Container container = dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-delayed-startup").build();
+        Container container = dockerRunner.containerFor("docker-runner/docker-runner-delayed-startup:v1").build();
         container.start(blockUntilHttpGetReturns200(), 1);
     }
 
     @Test
     public void shouldPassEnvVarsToContainer() throws Exception {
         String expectedValue = UUID.randomUUID().toString();
-        Container container = dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-image1:v2")
-                .env("TEST_VAR", expectedValue)
-                .build();
+        Container container = dockerRunner.containerFor("docker-runner/docker-runner-image1:v1")
+                               .env("TEST_VAR", expectedValue)
+                               .build();
         StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(), 3);
         String host = dockerRunner.host();
         int port = startedContainer.tcpPort(80);
@@ -131,15 +127,31 @@ public class DockerRunnerTest {
     @Test
     public void shouldPassDnsToContainer() throws Exception {
         String expectedDns = "0.1.2.3";
-        Container container = dockerRunner.containerFor("commregistry-slc.corp.ebay.com/spartans/docker-runner-image1:v2")
-                .dns(expectedDns)
-                .build();
+        Container container = dockerRunner.containerFor("docker-runner/docker-runner-image1:v1")
+                               .dns(expectedDns)
+                               .build();
         StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(), 3);
         String host = dockerRunner.host();
         int port = startedContainer.tcpPort(80);
         String url = String.format("http://%s:%s/dns.txt", host, port);
         String actualDns = client.target(url).request().get().readEntity(String.class);
         assertThat(actualDns, containsString(expectedDns));
+    }
+
+    @Test
+    public void shouldMountAVolume() throws Exception {
+        String expectedContent = "some content";
+
+        StartedContainer startedContainer = dockerRunner.containerFor("nginx")
+                                             .mountHostVolume(new File("src/test/resources/volumes").getAbsolutePath()).toContainerVolume("/usr/share/nginx/html")
+                                             .build()
+                                             .start();
+        String host = dockerRunner.host();
+        int port = startedContainer.tcpPort(80);
+        String url = String.format("http://%s:%s/content", host, port);
+        String actualContent = client.target(url).request().get().readEntity(String.class);
+
+        assertThat(actualContent, containsString(expectedContent));
     }
 
     private BlockUntil blockUntilHttpGetReturns200() {

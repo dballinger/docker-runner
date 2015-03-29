@@ -19,7 +19,8 @@ public class DockerRunner {
     }
 
     DockerRunner(DockerHostFactory dockerHostFactory) {
-        this.host = dockerHostFactory.dockerHostForEnvironment(System.getenv());;
+        this.host = dockerHostFactory.dockerHostForEnvironment(System.getenv());
+        ;
     }
 
     public ContainerBuilder containerFor(String image) {
@@ -37,6 +38,16 @@ public class DockerRunner {
         }
     }
 
+    static class VolumeMapping {
+        final String hostPath;
+        final String containerPath;
+
+        VolumeMapping(String hostPath, String containerPath) {
+            this.hostPath = hostPath;
+            this.containerPath = containerPath;
+        }
+    }
+
     public class ContainerBuilder {
         private final String image;
         private final List<Container> containers;
@@ -46,6 +57,7 @@ public class DockerRunner {
         private Option<Memory> memory = Option.None();
         private List<Container.Env> envs = new ArrayList<>();
         private Option<String> dns = Option.None();
+        private final List<VolumeMapping> volumeMappings = new ArrayList<>();
 
         ContainerBuilder(String image, List<Container> containers, DockerClient client) {
             this.image = image;
@@ -64,7 +76,7 @@ public class DockerRunner {
                     return new Link(alias, linkedContainers.get(alias).start());
                 }
             });
-            Container container = new Container(client, image, links, host(), cpuset, memory, envs, dns);
+            Container container = new Container(client, image, links, host(), cpuset, memory, envs, dns, volumeMappings);
             containers.add(container);
             return container;
         }
@@ -86,9 +98,13 @@ public class DockerRunner {
             return this;
         }
 
-        public ContainerBuilder dns(String dns){
+        public ContainerBuilder dns(String dns) {
             this.dns = Option.Some(dns);
             return this;
+        }
+
+        public VolumeBuilder mountHostVolume(String hostPath) {
+            return new VolumeBuilder(hostPath);
         }
 
         public class LinkBuilder {
@@ -101,6 +117,19 @@ public class DockerRunner {
 
             public ContainerBuilder withAlias(String alias) {
                 linkedContainers.put(alias, container);
+                return ContainerBuilder.this;
+            }
+        }
+
+        public class VolumeBuilder {
+            private String hostPath;
+
+            public VolumeBuilder(String hostPath) {
+                this.hostPath = hostPath;
+            }
+
+            public ContainerBuilder toContainerVolume(String containerPath) {
+                volumeMappings.add(new VolumeMapping(hostPath, containerPath));
                 return ContainerBuilder.this;
             }
         }
