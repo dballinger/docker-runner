@@ -32,7 +32,7 @@ public class DockerRunnerTest {
 
     @Test
     public void shouldStartASimpleContainer() throws Exception {
-        Container container = dockerRunner.containerFor("docker-runner/docker-runner-image1:v1").build();
+        Container container = dockerRunner.containerFor("dockerrunner/docker-runner-image1:v1").build();
         StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(), 3);
         String host = dockerRunner.host();
         int port = startedContainer.tcpPort(80);
@@ -43,7 +43,7 @@ public class DockerRunnerTest {
 
     @Test(expected = Exception.class)
     public void shouldStopAContainer() throws Exception {
-        Container container = dockerRunner.containerFor("docker-runner/docker-runner-image1:v1").build();
+        Container container = dockerRunner.containerFor("dockerrunner/docker-runner-image1:v1").build();
         StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(), 3);
         String host = dockerRunner.host();
         int port = startedContainer.tcpPort(80);
@@ -54,7 +54,7 @@ public class DockerRunnerTest {
 
     @Test(expected = Exception.class)
     public void shouldStopAContainerUsingTheRunner() throws Exception {
-        Container container = dockerRunner.containerFor("docker-runner/docker-runner-image1:v1").build();
+        Container container = dockerRunner.containerFor("dockerrunner/docker-runner-image1:v1").build();
         StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(), 3);
         String host = dockerRunner.host();
         int port = startedContainer.tcpPort(80);
@@ -65,8 +65,8 @@ public class DockerRunnerTest {
 
     @Test
     public void shouldStartALinkedContainer() throws Exception {
-        Container upstream = dockerRunner.containerFor("docker-runner/docker-runner-image1:v1").build();
-        Container proxy = dockerRunner.containerFor("docker-runner/docker-runner-proxy:v1").linkTo(upstream).withAlias("root").build();
+        Container upstream = dockerRunner.containerFor("dockerrunner/docker-runner-image1:v1").build();
+        Container proxy = dockerRunner.containerFor("dockerrunner/docker-runner-proxy:v1").linkTo(upstream).withAlias("root").build();
         StartedContainer startedProxy = proxy.start(blockUntilHttpGetReturns200(), 3);
         String host = dockerRunner.host();
         int port = startedProxy.tcpPort(80);
@@ -77,9 +77,9 @@ public class DockerRunnerTest {
 
     @Test
     public void shouldProvideAStartedLinkedContainer() throws Exception {
-        Container containerA = dockerRunner.containerFor("docker-runner/docker-runner-image1:v1").build();
-        Container containerB = dockerRunner.containerFor("docker-runner/docker-runner-image1:v1").build();
-        Container containerRequiringAandB = dockerRunner.containerFor("docker-runner/docker-runner-image1:v1")
+        Container containerA = dockerRunner.containerFor("dockerrunner/docker-runner-image1:v1").build();
+        Container containerB = dockerRunner.containerFor("dockerrunner/docker-runner-image1:v1").build();
+        Container containerRequiringAandB = dockerRunner.containerFor("dockerrunner/docker-runner-image1:v1")
                                              .linkTo(containerA).withAlias("a")
                                              .linkTo(containerB).withAlias("b")
                                              .build();
@@ -94,7 +94,7 @@ public class DockerRunnerTest {
     @Test
     public void shouldWaitForAInitialConditionToBeMet() throws Exception {
         //This image sleeps for 5 seconds before starting the webserver.
-        Container container = dockerRunner.containerFor("docker-runner/docker-runner-delayed-startup:v1").build();
+        Container container = dockerRunner.containerFor("dockerrunner/docker-runner-delayed-startup:v1").build();
         StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(), 7);
         String host = dockerRunner.host();
         int port = startedContainer.tcpPort(80);
@@ -106,14 +106,14 @@ public class DockerRunnerTest {
     @Test(expected = Container.ContainerStartupTimeoutException.class)
     public void shouldTimeoutIfUnableToMeetInitialConditionWithinTimeframe() throws Exception {
         //This image sleeps for 5 seconds before starting the webserver.
-        Container container = dockerRunner.containerFor("docker-runner/docker-runner-delayed-startup:v1").build();
+        Container container = dockerRunner.containerFor("dockerrunner/docker-runner-delayed-startup:v1").build();
         container.start(blockUntilHttpGetReturns200(), 1);
     }
 
     @Test
     public void shouldPassEnvVarsToContainer() throws Exception {
         String expectedValue = UUID.randomUUID().toString();
-        Container container = dockerRunner.containerFor("docker-runner/docker-runner-image1:v1")
+        Container container = dockerRunner.containerFor("dockerrunner/docker-runner-image1:v1")
                                .env("TEST_VAR", expectedValue)
                                .build();
         StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(), 3);
@@ -127,7 +127,7 @@ public class DockerRunnerTest {
     @Test
     public void shouldPassDnsToContainer() throws Exception {
         String expectedDns = "0.1.2.3";
-        Container container = dockerRunner.containerFor("docker-runner/docker-runner-image1:v1")
+        Container container = dockerRunner.containerFor("dockerrunner/docker-runner-image1:v1")
                                .dns(expectedDns)
                                .build();
         StartedContainer startedContainer = container.start(blockUntilHttpGetReturns200(), 3);
