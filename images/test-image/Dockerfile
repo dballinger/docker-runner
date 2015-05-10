@@ -2,6 +2,8 @@ FROM ubuntu
 
 # Install Nginx.
 RUN \
+  apt-get update && \
+  sudo apt-get install software-properties-common python-software-properties && \
   add-apt-repository -y ppa:nginx/stable && \
   apt-get update && \
   apt-get install -y nano && \
