@@ -7,6 +7,6 @@ While the set of functionality is fairly small, it targets common use cases that
 
 Please look at [DockerRunnerTest.java](https://github.com/eBay-European-Product-Development/docker-runner/blob/master/src/test/java/com/ebay/epd/dockerrunner/DockerRunnerTest.java) for its usage.
 
-Prerequistites
+Prerequisites
 --------------
 On linux this should just work out of the box. However, if you are on a Boot2Docker environment then you must ensure that the Docker environment variable are set in the shell or IDE from which you are using the library. The easiest way to do this is to run the flavour of ```boot2docker shellinit``` for your chosen platform. Take a look at [Windows](https://docs.docker.com/installation/windows/) or [Mac OSX](https://docs.docker.com/installation/mac/).
